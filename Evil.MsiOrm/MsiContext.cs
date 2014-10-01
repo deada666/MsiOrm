@@ -10,7 +10,7 @@ namespace Evil.MsiOrm
         {
         }
 
-        public override void OnInitializing()
+        protected override void OnInitializing()
         {
             RegisterTable<FileTable>();
         }

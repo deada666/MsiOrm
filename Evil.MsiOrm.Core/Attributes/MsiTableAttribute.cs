@@ -5,7 +5,7 @@ namespace Evil.MsiOrm.Core.Attributes
     [AttributeUsage(AttributeTargets.Class)]
     public class MsiTableAttribute : Attribute
     {
-        private readonly string TableName;
+        public string TableName { get; set; }
 
         public MsiTableAttribute(string table)
         {

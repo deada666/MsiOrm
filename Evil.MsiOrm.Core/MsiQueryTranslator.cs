@@ -27,9 +27,7 @@ namespace Evil.MsiOrm.Core
             sb.Append(rowToObjectConverter.TableName);
             sb.Append("` WHERE ");
             this.Visit(expression);
-            var query = this.sb.ToString();
-            query = query.Replace("= NULL", "IS NULL").Replace("<> NULL", "IS NOT NULL");
-            return query;
+            return this.sb.ToString();
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression m)
@@ -66,10 +64,26 @@ namespace Evil.MsiOrm.Core
                     sb.Append(" OR");
                     break;
                 case ExpressionType.Equal:
-                    sb.Append(" = ");
+                    if (b.Right.NodeType == ExpressionType.Constant && ((ConstantExpression)b.Right).Value == null)
+                    {
+                        sb.Append(" IS ");
+                    }
+                    else
+                    {
+                        sb.Append(" = ");
+                    }
+
                     break;
                 case ExpressionType.NotEqual:
-                    sb.Append(" <> ");
+                    if (b.Right.NodeType == ExpressionType.Constant && ((ConstantExpression)b.Right).Value == null)
+                    {
+                        sb.Append(" IS NOT ");
+                    }
+                    else
+                    {
+                        sb.Append(" <> ");
+                    }
+
                     break;
                 case ExpressionType.LessThan:
                     sb.Append(" < ");
@@ -164,8 +178,7 @@ namespace Evil.MsiOrm.Core
         {
             var objectMember = Expression.Convert(member, typeof(object));
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
-            var getter = getterLambda.Compile();
-            return getter();
+            return getterLambda.Compile();
         }
     }
 }

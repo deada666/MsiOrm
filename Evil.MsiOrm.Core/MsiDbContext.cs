@@ -16,7 +16,7 @@ namespace Evil.MsiOrm.Core
             OnInitializing();
         }
 
-        public abstract void OnInitializing();
+        protected abstract void OnInitializing();
 
         protected void RegisterTable<T>()
         {
