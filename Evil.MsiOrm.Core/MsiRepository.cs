@@ -60,6 +60,14 @@ namespace Evil.MsiOrm.Core
             return ExecuteSql(query);
         }
 
+        public void Delete(T entity)
+        {
+            var record = requestedRecords[entity];
+            var view = recordView[record];
+            view.Seek(record);
+            view.Delete(record);
+        }
+
         public void Dispose()
         {
             foreach (var record in recordView.Keys)

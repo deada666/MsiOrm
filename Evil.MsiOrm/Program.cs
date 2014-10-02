@@ -8,9 +8,21 @@ namespace Evil.MsiOrm
     {
         static void Main(string[] args)
         {
-            var db = new Database(@"C:\InstEd-1.5.15.26.msi");
             var a = Cool();
-            var context = new MsiContext(db);
+            var context = new MsiContext(@"c:\TestMSi.msi", DatabaseOpenMode.Transact);
+            using (var session = context.CreateSession())
+            {
+                var repository = session.GetRepository<FileTable>();
+                var table = repository.Query(x => x.Sequence > a && x.Language == null).ToArray();
+                foreach (var row in table)
+                {
+                    Console.WriteLine(row.File);
+                    repository.Delete(row);
+                }
+
+                //session.SaveChanges();
+            }
+
             using (var session = context.CreateSession())
             {
                 var repository = session.GetRepository<FileTable>();

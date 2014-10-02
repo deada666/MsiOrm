@@ -38,6 +38,13 @@ namespace Evil.MsiOrm.Core
             {
                 repository.Dispose();
             }
+
+            database.Dispose();
+        }
+
+        public void SaveChanges()
+        {
+            database.Commit();
         }
     }
 }

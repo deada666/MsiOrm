@@ -5,8 +5,13 @@ namespace Evil.MsiOrm
 {
     public class MsiContext : MsiDbContext
     {
-        public MsiContext(Database db)
-            : base(db)
+        public MsiContext(string dbPath)
+            : base(dbPath)
+        {
+        }
+
+        public MsiContext(string dbPath, DatabaseOpenMode openMode)
+            : base(dbPath, openMode)
         {
         }
 

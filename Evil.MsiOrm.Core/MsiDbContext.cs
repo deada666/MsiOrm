@@ -8,11 +8,19 @@ namespace Evil.MsiOrm.Core
     {
         private readonly Dictionary<Type, MsiRowToObjectConverter> tableConverters = new Dictionary<Type, MsiRowToObjectConverter>();
 
-        private readonly Database msiDatabase;
+        private readonly string databasePath;
 
-        protected MsiDbContext(Database db)
+        private readonly DatabaseOpenMode databaseOpenMode;
+
+        protected MsiDbContext(string dbPath)
+            : this(dbPath, DatabaseOpenMode.ReadOnly)
         {
-            msiDatabase = db;
+        }
+
+        protected MsiDbContext(string dbPath, DatabaseOpenMode openMode)
+        {
+            databasePath = dbPath;
+            databaseOpenMode = openMode;
             OnInitializing();
         }
 
@@ -27,7 +35,7 @@ namespace Evil.MsiOrm.Core
 
         public ISession CreateSession()
         {
-            return new MsiSession(msiDatabase, tableConverters);
+            return new MsiSession(new Database(databasePath, databaseOpenMode), tableConverters);
         }
     }
 }
