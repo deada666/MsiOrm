@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Evil.MsiOrm.Core</RootNamespace>
     <AssemblyName>Evil.MsiOrm.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,10 +48,12 @@
     <Compile Include="Attributes\MsiTableAttribute.cs" />
     <Compile Include="IMsiDbContext.cs" />
     <Compile Include="IMsiRepository.cs" />
+    <Compile Include="ISession.cs" />
     <Compile Include="MsiDbContext.cs" />
     <Compile Include="MsiQueryTranslator.cs" />
     <Compile Include="MsiRepository.cs" />
     <Compile Include="MsiRowToObjectConverter.cs" />
+    <Compile Include="MsiSession.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

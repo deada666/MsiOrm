@@ -2,6 +2,6 @@
 {
     public interface IMsiDbContext
     {
-        IMsiRepository<T> GetRepository<T>();
+        ISession CreateSession();
     }
 }

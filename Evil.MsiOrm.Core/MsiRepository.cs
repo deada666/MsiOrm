@@ -6,11 +6,26 @@ using System.Linq.Expressions;
 
 namespace Evil.MsiOrm.Core
 {
-    internal class MsiRepository<T> : IMsiRepository<T>
+    internal class MsiRepository<T> : IMsiRepository<T>, IDisposable
     {
         private readonly MsiRowToObjectConverter msiRowToObjectConverter;
 
         private readonly MsiQueryTranslator msiQueryTranslator;
+
+        /// <summary>
+        /// All entites that were created by repository.
+        /// </summary>
+        private readonly Dictionary<T, Record> requestedRecords = new Dictionary<T, Record>();
+
+        /// <summary>
+        /// All opened views that were opened during lifetime of repository.
+        /// </summary>
+        private readonly List<View> openedViews = new List<View>();
+
+        /// <summary>
+        /// Dictionary of all records that were requested from repository.
+        /// </summary>
+        private readonly Dictionary<Record, View> recordView = new Dictionary<Record, View>();
 
         private readonly Database database;
 
@@ -21,32 +36,41 @@ namespace Evil.MsiOrm.Core
             msiQueryTranslator = new MsiQueryTranslator(msiRowToObjectConverter);
         }
 
-        public IEnumerable<T> GetRowCollection()
+        private T ProcessRecord(View view, Record record, MsiRowToObjectConverter converter)
         {
-            return ExecuteSql("SELECT * FROM `" + msiRowToObjectConverter.TableName + "`");
-        }
-
-        private T ProcessRecord<T>(Record record, MsiRowToObjectConverter converter)
-        {
-            using (record)
-            {
-                return (T)converter.Convert(record);
-            }
+            recordView.Add(record, view);
+            var entity = (T)converter.Convert(record);
+            requestedRecords.Add(entity, record);
+            return entity;
         }
 
         private IEnumerable<T> ExecuteSql(string sql)
         {
-            using (var view = database.OpenView(sql))
-            {
-                view.Execute();
-                return view.Select(x => ProcessRecord<T>(x, msiRowToObjectConverter)).ToArray();
-            }
+            var view = database.OpenView(sql);
+            openedViews.Add(view);
+            view.Execute();
+            return view.Select(x => ProcessRecord(view, x, msiRowToObjectConverter));
         }
 
-        public IEnumerable<T> Query(Expression<Predicate<T>> expression)
+        public IEnumerable<T> Query(Expression<Predicate<T>> expression = null)
         {
-            var query = msiQueryTranslator.Translate(expression);
+            var query = expression == null ? 
+                "SELECT * FROM `" + msiRowToObjectConverter.TableName + "`" 
+                : msiQueryTranslator.Translate(expression);
             return ExecuteSql(query);
+        }
+
+        public void Dispose()
+        {
+            foreach (var record in recordView.Keys)
+            {
+                record.Dispose();
+            }
+
+            foreach (var view in openedViews)
+            {
+                view.Dispose();
+            }
         }
     }
 }

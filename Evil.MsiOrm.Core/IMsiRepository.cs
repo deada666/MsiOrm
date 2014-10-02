@@ -6,8 +6,6 @@ namespace Evil.MsiOrm.Core
 {
     public interface IMsiRepository<T>
     {
-        IEnumerable<T> GetRowCollection();
-
-        IEnumerable<T> Query(Expression<Predicate<T>> expression);
+        IEnumerable<T> Query(Expression<Predicate<T>> expression = null);
     }
 }

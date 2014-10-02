@@ -1,9 +1,6 @@
 ﻿using Microsoft.Deployment.WindowsInstaller;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Evil.MsiOrm
 {
@@ -14,13 +11,16 @@ namespace Evil.MsiOrm
             var db = new Database(@"C:\InstEd-1.5.15.26.msi");
             var a = Cool();
             var context = new MsiContext(db);
-            var repository = context.GetRepository<FileTable>();
-            var table = repository.Query(x => x.Sequence > a && x.Language == null);
-            foreach (var row in table)
+            using (var session = context.CreateSession())
             {
-                Console.WriteLine(row.File);
+                var repository = session.GetRepository<FileTable>();
+                var table = repository.Query(x => x.Sequence > a && x.Language == null).ToArray();
+                foreach (var row in table)
+                {
+                    Console.WriteLine(row.File);
+                }
             }
-
+            
             Console.ReadKey(true);
         }
 

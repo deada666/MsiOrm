@@ -25,11 +25,9 @@ namespace Evil.MsiOrm.Core
             tableConverters.Add(tableType, converter);
         }
 
-        public IMsiRepository<T> GetRepository<T>()
+        public ISession CreateSession()
         {
-            var tableType = typeof(T);
-            var converter = tableConverters[tableType];
-            return (IMsiRepository<T>)Activator.CreateInstance(typeof(MsiRepository<T>), converter, msiDatabase);
+            return new MsiSession(msiDatabase, tableConverters);
         }
     }
 }

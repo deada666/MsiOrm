@@ -21,18 +21,18 @@ namespace Evil.MsiOrm.Core
 
         private void Initialize()
         {
-            var tableAttribute = objectType.CustomAttributes.FirstOrDefault(x => x.AttributeType == typeof(MsiTableAttribute));
-            TableName = tableAttribute.ConstructorArguments[0].Value.ToString();
+            var tableAttribute = objectType.GetCustomAttributes(typeof(MsiTableAttribute), false).FirstOrDefault() as MsiTableAttribute;
+            TableName = tableAttribute.TableName;
             var tempProperties = objectType.GetProperties();
             foreach (var property in tempProperties)
             {
-                var attribute = property.CustomAttributes.FirstOrDefault(x => x.AttributeType == typeof(MsiColumnAttribute));
+                var attribute = property.GetCustomAttributes(typeof(MsiColumnAttribute), false).FirstOrDefault() as MsiColumnAttribute;
                 if (attribute == null)
                 {
                     continue;
                 }
 
-                properties.Add(attribute.ConstructorArguments[0].Value.ToString(), property);
+                properties.Add(attribute.ColumnName, property);
             }
         }
 
@@ -45,7 +45,7 @@ namespace Evil.MsiOrm.Core
             {
                 var value = record[key];
                 var propertyInfo = properties[key];
-                propertyInfo.SetValue(tempObject, value);
+                propertyInfo.SetValue(tempObject, value, null);
             }
 
             return tempObject;

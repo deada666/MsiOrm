@@ -162,14 +162,14 @@ namespace Evil.MsiOrm.Core
                     m.Member.Name));
             }
 
-            var attribute = property.CustomAttributes.FirstOrDefault(x => x.AttributeType == typeof(MsiColumnAttribute));
+            var attribute = property.GetCustomAttributes(typeof(MsiColumnAttribute), false).FirstOrDefault() as MsiColumnAttribute;
             if (attribute == null)
             {
                 throw new NotSupportedException(string.Format("The member '{0}' doesn't have MsiColumn attribute", m.Member.Name));
             }
 
             sb.Append('`');
-            sb.Append(attribute.ConstructorArguments.First().Value);
+            sb.Append(attribute.ColumnName);
             sb.Append('`');
             return m;
         }
@@ -178,7 +178,8 @@ namespace Evil.MsiOrm.Core
         {
             var objectMember = Expression.Convert(member, typeof(object));
             var getterLambda = Expression.Lambda<Func<object>>(objectMember);
-            return getterLambda.Compile();
+            var getter = getterLambda.Compile();
+            return getter();
         }
     }
 }
