@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Attributes\MsiColumnAttribute.cs" />
     <Compile Include="Attributes\MsiTableAttribute.cs" />
+    <Compile Include="IDisposableRepository.cs" />
     <Compile Include="IMsiDbContext.cs" />
     <Compile Include="IMsiRepository.cs" />
     <Compile Include="ISession.cs" />

@@ -8,7 +8,7 @@ namespace Evil.MsiOrm.Core
     {
         private readonly Database database;
 
-        private readonly Dictionary<Type, IDisposable> requestedRepositories = new Dictionary<Type, IDisposable>();
+        private readonly Dictionary<Type, IDisposableRepository> requestedRepositories = new Dictionary<Type, IDisposableRepository>();
 
         private readonly IDictionary<Type, MsiRowToObjectConverter> tableConverters;
 
@@ -38,12 +38,15 @@ namespace Evil.MsiOrm.Core
             {
                 repository.Dispose();
             }
-
-            database.Dispose();
         }
 
         public void SaveChanges()
         {
+            foreach (var repository in requestedRepositories.Values)
+            {
+                repository.SaveChanges();
+            }
+
             database.Commit();
         }
     }

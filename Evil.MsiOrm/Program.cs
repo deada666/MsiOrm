@@ -9,7 +9,8 @@ namespace Evil.MsiOrm
         static void Main(string[] args)
         {
             var a = Cool();
-            var context = new MsiContext(@"c:\TestMSi.msi", DatabaseOpenMode.Transact);
+            var db = new Database(@"c:\Test.msi", DatabaseOpenMode.Transact);
+            var context = new MsiContext(db);
             using (var session = context.CreateSession())
             {
                 var repository = session.GetRepository<FileTable>();
@@ -20,7 +21,7 @@ namespace Evil.MsiOrm
                     repository.Delete(row);
                 }
 
-                //session.SaveChanges();
+                session.SaveChanges();
             }
 
             using (var session = context.CreateSession())

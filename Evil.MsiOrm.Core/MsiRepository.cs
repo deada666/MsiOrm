@@ -6,26 +6,20 @@ using System.Linq.Expressions;
 
 namespace Evil.MsiOrm.Core
 {
-    internal class MsiRepository<T> : IMsiRepository<T>, IDisposable
+    internal class MsiRepository<T> : IMsiRepository<T>, IDisposableRepository
     {
         private readonly MsiRowToObjectConverter msiRowToObjectConverter;
 
         private readonly MsiQueryTranslator msiQueryTranslator;
 
+        private readonly string selectAllQuery;
+
+        private readonly List<T> rowsToDelete = new List<T>();
+
         /// <summary>
         /// All entites that were created by repository.
         /// </summary>
         private readonly Dictionary<T, Record> requestedRecords = new Dictionary<T, Record>();
-
-        /// <summary>
-        /// All opened views that were opened during lifetime of repository.
-        /// </summary>
-        private readonly List<View> openedViews = new List<View>();
-
-        /// <summary>
-        /// Dictionary of all records that were requested from repository.
-        /// </summary>
-        private readonly Dictionary<Record, View> recordView = new Dictionary<Record, View>();
 
         private readonly Database database;
 
@@ -33,51 +27,63 @@ namespace Evil.MsiOrm.Core
         {
             msiRowToObjectConverter = converter;
             database = db;
+            selectAllQuery = string.Format("SELECT * FROM `{0}`", msiRowToObjectConverter.TableName);
             msiQueryTranslator = new MsiQueryTranslator(msiRowToObjectConverter);
         }
 
-        private T ProcessRecord(View view, Record record, MsiRowToObjectConverter converter)
+        private T ProcessRecord(Record record)
         {
-            recordView.Add(record, view);
-            var entity = (T)converter.Convert(record);
+            var entity = (T)msiRowToObjectConverter.Convert(record);
             requestedRecords.Add(entity, record);
             return entity;
         }
 
         private IEnumerable<T> ExecuteSql(string sql)
         {
-            var view = database.OpenView(sql);
-            openedViews.Add(view);
-            view.Execute();
-            return view.Select(x => ProcessRecord(view, x, msiRowToObjectConverter));
+            using (var view = database.OpenView(sql))
+            {
+                view.Execute();
+                Record record;
+                do
+                {
+                    record = view.Fetch();
+                    if (record != null)
+                    {
+                        yield return ProcessRecord(record);
+                    }
+                }
+                while (record != null);
+            }
         }
 
         public IEnumerable<T> Query(Expression<Predicate<T>> expression = null)
         {
-            var query = expression == null ? 
-                "SELECT * FROM `" + msiRowToObjectConverter.TableName + "`" 
-                : msiQueryTranslator.Translate(expression);
+            var query = expression == null ? selectAllQuery : msiQueryTranslator.Translate(expression);
             return ExecuteSql(query);
         }
 
         public void Delete(T entity)
         {
-            var record = requestedRecords[entity];
-            var view = recordView[record];
-            view.Seek(record);
-            view.Delete(record);
+            rowsToDelete.Add(entity);
+        }
+
+        public void SaveChanges()
+        {
+            using (var view = database.OpenView(selectAllQuery))
+            {
+                foreach (var record in rowsToDelete.Select(x => requestedRecords[x]).ToArray())
+                {
+                    view.Seek(record);
+                    view.Delete(record);
+                }
+            }
         }
 
         public void Dispose()
         {
-            foreach (var record in recordView.Keys)
+            foreach (var record in requestedRecords.Values)
             {
                 record.Dispose();
-            }
-
-            foreach (var view in openedViews)
-            {
-                view.Dispose();
             }
         }
     }
